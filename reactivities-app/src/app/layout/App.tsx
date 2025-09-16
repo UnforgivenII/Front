@@ -12,6 +12,7 @@ function App() {
   const [selectedActivity, setSelectedActivity] = useState<
     Activity | undefined
   >(undefined);
+  const [editMode, setEditMode] = useState(false);
   useEffect(() => {
     axios.get("https://localhost:7142/api/activities").then((response) => {
       console.log(response);
@@ -26,15 +27,27 @@ function App() {
     setSelectedActivity(undefined);
   }
 
+  function handelFormOpen(id?: string) {
+    id ? handelSelectedActivity(id) : handelCancelSelectedActivity();
+    setEditMode(true);
+  }
+
+  function handelFormClose() {
+    setEditMode(false);
+  }
+
   return (
     <div>
-      <Navbar />
+      <Navbar openForm={handelFormOpen} />
       <Container style={{ marginTop: "7em" }}>
-        <ActivityDashboard 
-        activities={activities}
-        selectedActivity={selectedActivity}
-        selectActivity={handelCancelSelectedActivity}
-        cancelSelectActivity={handelCancelSelectedActivity}
+        <ActivityDashboard
+          activities={activities}
+          selectedActivity={selectedActivity}
+          selectActivity={handelSelectedActivity}
+          cancelSelectActivity={handelCancelSelectedActivity}
+          editMode={editMode}
+          openForm={handelFormOpen}
+          closeForm={handelFormClose}
         />
       </Container>
     </div>
