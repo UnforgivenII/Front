@@ -6,6 +6,8 @@ import { Container, Header } from "semantic-ui-react";
 import { Activity } from "../models/activity";
 import Navbar from "./NavBar";
 import ActivityDashboard from "../features/activities/dashboard/ActivityDashboard";
+import { v4 as uuid } from "uuid";
+import agent from "../api/agent";
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -14,9 +16,18 @@ function App() {
   >(undefined);
   const [editMode, setEditMode] = useState(false);
   useEffect(() => {
-    axios.get("https://localhost:7142/api/activities").then((response) => {
-      console.log(response);
-      setActivities(response.data);
+    // axios.get("").then((response) => {
+    //   console.log(response);
+    //   setActivities(response.data);
+    // });
+    agent.Activities.List().then((response) => {
+      let activities: Activity[] = [];
+      response.forEach((activity) => {
+        activity.date = activity.date.split("T")[0];
+        activities.push(activity);
+      });
+
+      setActivities(response);
     });
   }, []);
   function handelSelectedActivity(id: string) {
@@ -36,6 +47,22 @@ function App() {
     setEditMode(false);
   }
 
+  function handelCreateOrEditActivity(activity: Activity) {
+    activity.id
+      ? setActivities([
+          ...activities.filter((a) => a.id !== activity.id),
+          activity,
+        ])
+      : setActivities([...activities, { ...activity, id: uuid() }]);
+
+    setEditMode(false);
+    setSelectedActivity(activity);
+  }
+
+  function handelDeleteActivity(id: string) {
+    setActivities([...activities.filter((a) => a.id !== id)]);
+  }
+
   return (
     <div>
       <Navbar openForm={handelFormOpen} />
@@ -48,6 +75,8 @@ function App() {
           editMode={editMode}
           openForm={handelFormOpen}
           closeForm={handelFormClose}
+          CreateOrEditActivity={handelCreateOrEditActivity}
+          deleteActivity={handelDeleteActivity}
         />
       </Container>
     </div>
