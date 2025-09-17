@@ -15,6 +15,7 @@ function App() {
     Activity | undefined
   >(undefined);
   const [editMode, setEditMode] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   useEffect(() => {
     // axios.get("").then((response) => {
     //   console.log(response);
@@ -48,19 +49,34 @@ function App() {
   }
 
   function handelCreateOrEditActivity(activity: Activity) {
-    activity.id
-      ? setActivities([
+    setSubmitting(true);
+
+    if (activity.id) {
+      agent.Activities.update(activity).then(() => {
+        setActivities([
           ...activities.filter((a) => a.id !== activity.id),
           activity,
-        ])
-      : setActivities([...activities, { ...activity, id: uuid() }]);
-
-    setEditMode(false);
-    setSelectedActivity(activity);
+        ]);
+        setSelectedActivity(activity);
+        setEditMode(false);
+        setSubmitting(false);
+      });
+    } else {
+      activity.id = uuid();
+      agent.Activities.create(activity).then(() => {
+        setActivities([...activities, activity]);
+        setSelectedActivity(activity);
+        setEditMode(false);
+        setSubmitting(false);
+      });
+    }
   }
-
   function handelDeleteActivity(id: string) {
-    setActivities([...activities.filter((a) => a.id !== id)]);
+    setSubmitting(true);
+    agent.Activities.delete(id).then(() => {
+      setActivities([...activities.filter((a) => a.id !== id)]);
+      setSubmitting(false);
+    });
   }
 
   return (
@@ -77,6 +93,7 @@ function App() {
           closeForm={handelFormClose}
           CreateOrEditActivity={handelCreateOrEditActivity}
           deleteActivity={handelDeleteActivity}
+          submitting={submitting}
         />
       </Container>
     </div>
